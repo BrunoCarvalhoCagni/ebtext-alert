@@ -6,28 +6,31 @@ async function getAlert(payload) {
     console.log('Payload recebido no getAlert:', JSON.stringify(payload, null, 2));
 
     if (payload && payload.event) {
-      const eventType = payload.event.type; 
+      // Primeiro tenta pegar do event.type, se não existir, pega da subscription.type
+      const eventType = payload.event.type || payload.subscription.type;
       const broadcasterName = payload.event.broadcaster_user_name;
-      var alert = ''
+      
+      let alert = '';
+      let flavor = '';
+
       switch (eventType) {
         case 'stream.online':
-          alert = `Stream do ${broadcasterName} esta ONLINE!`;
+          alert = `Stream do ${broadcasterName} está ONLINE!`;
+          flavor = 'mint';
           break;
-        case 'stream.offline':
-          alert = `Stream do ${broadcasterName} esta OFFLINE.`;
-          break;
-        default:
-          alert = `Evento nao reconhecido: ${eventType}`;
+          
+        case 'channel.follow':
+          const followerName = payload.event.user_name;
+          alert = `${followerName} acabou de seguir ${broadcasterName}!`;
+          flavor = 'peanut';
           break;
       }
 
-      return { message: 'Evento processado com sucesso!', eventType: eventType, alert: alert };
-
+      return { message: 'Evento processado com sucesso!', eventType, alert, flavor };
     }
 
     return { message: 'Erro ao processar o evento' };
 
-    
   } catch (err) {
     console.error('Erro ao processar o evento:', err.message);
     throw err; 

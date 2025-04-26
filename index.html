@@ -90,16 +90,16 @@
                 }
             });
 
-            function generate(e) {
+            function generate(message, flavor) {
 
                 $('.loader').addClass('loading');
                 document.getElementById('image').src = '';
-
+                // speed: 15 fast, 33 medium, 50 slow  
                 EarthboundText.render({
                     canvas: document.getElementById('bitmap'),
-                    flavor: $('input:radio[name=flavor]:checked').val(),
-                    speed: $('input:radio[name=speed]:checked').val(),
-                    text: $('#text').val(),
+                    flavor: flavor,
+                    speed: '33',
+                    text: message,
                     on_render: function(blob) {
                         currentBlob = blob
                         $('#image').attr('src', URL.createObjectURL(blob));
@@ -112,47 +112,29 @@
             }
 
             // new code for twitch alert begins here
-            fetch('http://localhost:4000/api/alert', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',  // Especifica que estamos enviando JSON
-            },
-            body: JSON.stringify({
-                "subscription": {
-                    "id": "26d5b03d-bb79-46f5-b7f1-123456789abc",
-                    "type": "stream.online",
-                    "version": "1",
-                    "status": "enabled",
-                    "cost": 0,
-                    "condition": {
-                    "broadcaster_user_id": "123456789"
-                    },
-                    "transport": {
-                    "method": "webhook",
-                    "callback": "https://seuservidor.com/webhooks/callback"
-                    },
-                    "created_at": "2025-04-25T12:00:00Z"
-                },
-                "event": {
-                    "id": "9001",
-                    "broadcaster_user_id": "123456789",
-                    "broadcaster_user_login": "streamerlogin",
-                    "broadcaster_user_name": "StreamerName",
-                    "type": "stream.online", 
-                    "started_at": "2025-04-25T12:15:00Z"
-                }
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Resposta do backend:', data);
-                // Aqui você pode tratar os dados recebidos do backend
-                $('#text').val(data.data.alert);
-                generate();
-            })
-            .catch(error => {
-                console.error('Erro na requisição:', error);
-            });
+            let lastAlertShown = null; 
+            
+            function getAlertFromServer() {
+                fetch('http://localhost:4000/api/alert')
+                    .then(response => response.json())
+                    .then(data => {
+                        const newAlert = data.data;
+
+                        if (!lastAlertShown || lastAlertShown.alert !== newAlert.alert) { // check if there's any new alert
+                            console.log('Novo alerta detectado:', newAlert);
+                            generate(newAlert.alert, newAlert.flavor); // show alert
+                            lastAlertShown = newAlert; // update last shown alert
+                        } else {
+                            console.log('Alerta repetido, não fazer nada.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar alerta:', error);
+                    });
+            }
+
+            //GET interval
+            setInterval(getAlertFromServer, 5000);
         });
     </script>
 </head>
