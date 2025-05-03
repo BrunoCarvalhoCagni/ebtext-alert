@@ -106,7 +106,31 @@
                         $('.loader').removeClass('loading');
                         generated = true;
                         $('.actions').removeClass('hidden');
+                        //upload image
+                        uploadImage(blob);
+                        
+
                     }
+                });
+
+            }
+
+            function uploadImage(blob){
+                // send to backend as FormData
+                const formData = new FormData();
+                formData.append('alertGif', blob, 'alert.gif');
+                console.log('blob', blob);
+
+                fetch('http://localhost:4000/api/upload-alert', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('GIF enviado para backend com sucesso:', data);
+                })
+                .catch(error => {
+                    console.error('Erro ao enviar o GIF para o backend:', error);
                 });
 
             }

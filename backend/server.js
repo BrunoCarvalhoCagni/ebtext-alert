@@ -2,9 +2,16 @@
 const express = require('express');
 const cors = require('cors');
 const getAlert = require('./getAlert');
+require('dotenv').config();
+
 
 const app = express();
 const PORT = 4000;
+
+//for upload alert
+const multer = require('multer');
+const upload = multer(); 
+const saveGif = require('./saveGif'); 
 
 let lastAlert = null; // stores last alert to get
 
@@ -48,6 +55,19 @@ app.get('/api/alert', (req, res) => {
     res.json({ data: lastAlert });
   } else {
     res.status(404).json({ error: 'Nenhum alerta disponível' });
+  }
+});
+
+// upload alert
+
+app.post('/api/upload-alert', upload.single('alertGif'), (req, res) => {
+  try {
+    const buffer = req.file.buffer;
+    saveGif(buffer);
+    res.json({ status: 'GIF salvo com sucesso no OBS' });
+  } catch (err) {
+    console.error('Erro ao salvar o GIF:', err.message);
+    res.status(500).json({ error: 'Erro ao salvar o GIF no OBS' });
   }
 });
 
