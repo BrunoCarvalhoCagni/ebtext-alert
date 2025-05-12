@@ -21,7 +21,7 @@ async function getAlert(payload) {
           
         case 'channel.follow':
           const followerName = payload.event.user_name;
-          alert = `${followerName} acabou de seguir ${broadcasterName}!`;
+          alert = `${followerName} acabou de seguir [LINE] ${broadcasterName}!`;
           flavor = 'peanut';
           break;
       }

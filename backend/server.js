@@ -71,6 +71,15 @@ app.post('/api/upload-alert', upload.single('alertGif'), (req, res) => {
   }
 });
 
+// route to feed latest alert to /alerts 
+app.get('/api/latest-alert', (req, res) => {
+  if (lastAlert) {
+    res.json({ status: 'ok', data: lastAlert });
+  } else {
+    res.json({ status: 'vazio', data: null });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor backend rodando em http://localhost:${PORT}`);
 });

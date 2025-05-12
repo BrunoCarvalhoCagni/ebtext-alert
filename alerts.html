@@ -1,0 +1,109 @@
+<html>
+<head>
+    <title>Twitch alerts</title>
+    <meta name="Description" content="Create animated dialog boxes in the style of Nintendo's cult classic RPG EarthBound, also known as Mother 2." />
+    <meta name="Keywords" content="gif, earthbound, text, mother 2, nintendo, super nintendo, bill eager, open source" />
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="styles/main.css" />
+    <script src="//code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+    <script src="scripts/gif.js"></script>
+    <script src="scripts/lib/ebtext.js"></script>
+    <script>
+        $(document).ready(function() {
+
+            EarthboundText.preload_assets();
+
+            var generated = false;
+
+            currentBlob = null;
+
+            function generate(message, flavor) {
+
+            document.getElementById('image').src = '';
+            // speed: 15 fast, 33 medium, 50 slow  
+            EarthboundText.render({
+                canvas: document.getElementById('bitmap'),
+                flavor: flavor,
+                speed: '33',
+                text: message,
+                on_render: function(blob) {
+                    currentBlob = blob
+                    $('#image').attr('src', URL.createObjectURL(blob));
+                    $('#last-alert-box .alert-container').addClass('visible');
+                    setTimeout(() => {
+                        $('#last-alert-box .alert-container').removeClass('visible');
+                    }, 4000);
+                    //save alerts checkbox
+                    var saveAlerts = $("#save-alerts").is(':checked');
+                    if(saveAlerts){
+                        console.log('entrou')
+                        //download image
+                        downloadImage(blob);
+                    }
+                    
+
+                }
+            });
+
+            }
+
+            function downloadImage(blob){
+            // send to backend as FormData
+            const formData = new FormData();
+            formData.append('alertGif', blob, 'alert.gif');
+            console.log('blob', blob);
+
+            fetch('http://localhost:4000/api/upload-alert', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('GIF enviado para backend com sucesso:', data);
+            })
+            .catch(error => {
+                console.error('Erro ao enviar o GIF para o backend:', error);
+            });
+
+            }
+
+            // new code for twitch alert begins here
+            let lastAlertShown = null; 
+
+            function getAlertFromServer() {
+            fetch('http://localhost:4000/api/alert')
+                .then(response => response.json())
+                .then(data => {
+                    const newAlert = data.data;
+
+                    if (!lastAlertShown || lastAlertShown.alert !== newAlert.alert) { // check if there's any new alert
+                        console.log('Novo alerta detectado:', newAlert);
+                        generate(newAlert.alert, newAlert.flavor); // show alert
+                        lastAlertShown = newAlert; // update last shown alert
+                    } else {
+                        console.log('Alerta repetido, não fazer nada.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar alerta:', error);
+                });
+            }
+
+            //GET interval
+            setInterval(getAlertFromServer, 5000);
+        });
+    </script>
+</head>
+<body>
+    <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 10px"><input type="checkbox" id="save-alerts"> <label for="save-alerts" style="margin: 0; margin-top: 5px;">Save alerts in your computer</label></div>
+    <div id="last-alert-box">
+        <div class="alert-container">
+            <canvas id="bitmap"></canvas>
+            <img id="image" src="" alt="your-alert"/>
+        </div>
+    </div>
+
+</body>
+</html>

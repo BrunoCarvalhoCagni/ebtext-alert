@@ -82,3 +82,21 @@ body {
 	background: rgba(255,255,255,.9);
 	border-radius: 8px;
 }
+
+/* alert styles */
+#last-alert-box .alert-container{
+
+	background-color: #04F404;
+	width: 608px;
+	height: 256px;
+}
+#last-alert-box .alert-container img{
+	opacity: 0;
+    transition: opacity 0.5s ease;
+
+}
+
+#last-alert-box .alert-container.visible img{
+	opacity: 1;
+
+}
